@@ -1,90 +1,129 @@
-# Atelier : API-Driven Infrastructure sur LocalStack
+# ☁️ API-Driven Infrastructure (LocalStack Edition)
 
-Ce projet implémente une orchestration de services AWS simulés (LocalStack) pilotée par API. L'objectif est de contrôler une instance EC2 (Démarrage, Arrêt, Supervision) via des requêtes HTTP publiques, sans passer par la console AWS, le tout exécuté dans un GitHub Codespace.
+> **Projet :** Pilotage dynamique d'une infrastructure AWS simulée via API REST.
+> **Concept :** "Zero Console" - Tout est contrôlé par le code et les requêtes HTTP.
 
----
-
-## 🏗️ Architecture du projet
-
-Le projet repose sur l'interaction de trois services AWS simulés :
-1.  **API Gateway :** Point d'entrée public (Exposé via le proxy GitHub Codespaces).
-2.  **AWS Lambda (Python) :** Cerveau de l'opération, elle reçoit l'ordre de l'API et pilote l'infrastructure.
-3.  **EC2 (Elastic Compute Cloud) :** La ressource d'infrastructure cible que l'on souhaite démarrer ou arrêter.
+Ce projet démontre comment orchestrer des ressources Cloud (EC2) sans jamais toucher à une console graphique. L'architecture repose sur **API Gateway** et **Lambda** pour piloter une instance **EC2** au sein d'un environnement **LocalStack** (émulateur AWS).
 
 ---
 
-## ⚙️ Séquence 1 & 2 : Mise en place de l'environnement
+## 🏗️ Architecture Technique
 
-Avant de lancer l'automatisation, l'environnement AWS simulé (LocalStack) a été préparé dans le conteneur GitHub Codespaces suivant cette procédure :
+Le flux de données est le suivant :
 
-### 1. Démarrage de l'environnement
-L'environnement s'exécute dans un **GitHub Codespace**, offrant un conteneur Linux isolé.
+```mermaid
+graph LR
+    User[👤 Utilisateur / Navigateur] -- GET Request --> APIG[🌐 API Gateway]
+    APIG -- Trigger --> Lambda[⚡ AWS Lambda (Python)]
+    Lambda -- Boto3 SDK --> EC2[💻 Instance EC2 (LocalStack)]
+    EC2 -- Retour Etat --> Lambda
+    Lambda -- JSON Response --> User
 
-### 2. Installation des dépendances (LocalStack)
-Les commandes suivantes ont permis d'installer le moteur AWS local :
+```
 
-* **Création d'un environnement virtuel Python :**
-    ```bash
-    sudo -i mkdir rep_localstack
-    sudo -i python3 -m venv ./rep_localstack
-    ```
-    *Pourquoi ?* Cela permet d'isoler les librairies du projet du reste du système.
-
-* **Installation et Configuration :**
-    ```bash
-    sudo -i pip install --upgrade pip && python3 -m pip install localstack
-    export S3_SKIP_SIGNATURE_VALIDATION=0
-    ```
-    *Pourquoi ?* On installe `localstack` (le simulateur AWS) et on configure une variable d'environnement pour faciliter les échanges S3 (optionnel ici mais bonne pratique).
-
-* **Démarrage du service :**
-    ```bash
-    localstack start -d
-    ```
-    *Pourquoi ?* L'option `-d` lance LocalStack en tâche de fond (daemon).
-
-### 3. Exposition Publique (CRUCIAL)
-Pour respecter la consigne **"Pas de dépendance au Localhost"**, le port de communication AWS a été ouvert :
-* **Port :** `4566`
-* **Visibilité :** Configurée sur **Public** (via l'onglet *PORTS* de VS Code).
-* **Résultat :** Une URL publique en `app.github.dev` qui sert de *ENDPOINT AWS*.
+* **API Gateway** : Expose les endpoints publics (`/start`, `/stop`, `/status`).
+* **AWS Lambda** : "Cerveau" du projet. Reçoit l'ordre, interagit avec l'EC2 et renvoie une réponse JSON formatée (UTF-8).
+* **EC2** : La ressource d'infrastructure cible (Machine Virtuelle simulée).
 
 ---
 
-## 🚀 Séquence 3 : Déploiement Automatisé (Infrastructure as Code)
+## 🚀 Installation & Démarrage (Automatisé)
 
-Plutôt que de créer les ressources manuellement, j'ai développé un script d'automatisation **`setup.sh`** qui déploie l'architecture complète en une seule commande.
+Ce projet utilise un **Makefile** pour automatiser l'installation des dépendances, le démarrage du moteur Cloud et le déploiement de l'infra.
 
-### Procédure de déploiement
-1.  Ouvrir un terminal dans le Codespace.
-2.  Exécuter le script :
-    ```bash
-    chmod +x setup.sh
-    ./setup.sh
-    ```
+### Pré-requis
 
-### Que fait le script `setup.sh` ? (Détails Techniques)
-Le script orchestre la création de l'infrastructure en 5 étapes clés :
+* GitHub Codespaces (Recommandé) ou Linux avec Python 3.
 
-1.  **Installation des outils CLI :** Vérifie et installe `awscli-local` si manquant.
-2.  **Infrastructure Cible (EC2) :** Démarre une instance EC2 et récupère son ID (ex: `i-12345...`) automatiquement.
-3.  **Sécurité (IAM) :** Crée un rôle `lambda-ec2-role` pour autoriser la Lambda à piloter EC2.
-4.  **Logique (Lambda) :** Génère et déploie le code Python.
-    * *Note technique :* Le code utilise `LOCALSTACK_HOSTNAME` pour communiquer en interne avec Docker, garantissant l'indépendance vis-à-vis du localhost utilisateur.
-5.  **Exposition (API Gateway) :** Configure le routing URL.
+### 1. Installation & Démarrage
+
+Lancez les commandes suivantes pour préparer l'environnement :
+
+```bash
+make install   # Crée le venv et installe LocalStack/AWS CLI
+make start     # Démarre le moteur AWS en arrière-plan
+
+```
+
+### ⚠️ ÉTAPE CRITIQUE : Exposition du Port
+
+Avant de continuer, vous **devez** rendre l'API accessible :
+
+1. Allez dans l'onglet **[PORTS]** de VS Code.
+2. Repérez le port **4566**.
+3. Faites **Clic-droit > Visibilité du port > Public**.
+
+> *Sans cette action, les URLs générées ne seront pas accessibles depuis votre navigateur.*
+
+### 2. Déploiement de l'Infrastructure
+
+Une fois le port ouvert, lancez le script de déploiement "Ultimate" :
+
+```bash
+make deploy
+
+```
+
+Ce script va automatiquement :
+
+* Detecter votre URL Codespace.
+* Lancer une instance EC2.
+* Configurer la sécurité (IAM).
+* Déployer le code Lambda et l'API Gateway.
+* **Vous afficher les liens de contrôle cliquables.**
 
 ---
 
-## 🎮 Séquence 4 : Utilisation (Démonstration)
+## 🎮 Utilisation de l'API
 
-Le script termine en affichant 3 URLs. Ces URLs sont accessibles publiquement via internet (pas de localhost).
+L'API répond en JSON formaté avec des émojis pour indiquer l'état visuellement.
 
-### Les Endpoints de pilotage :
+| Méthode | Endpoint | Action | Réponse attendue (Exemple) |
+| --- | --- | --- | --- |
+| **GET** | `/status` | Vérifie l'état de la VM | `{"etat_actuel": "running", "message_info": "🔍 Vérification..."}` |
+| **GET** | `/stop` | Éteint la VM | `{"etat_actuel": "stopped", "message_info": "🛑 Arrêt demandé..."}` |
+| **GET** | `/start` | Allume la VM | `{"etat_actuel": "pending", "message_info": "🚀 Démarrage initié..."}` |
 
-| Action | Route | Résultat attendu (JSON) |
-| :--- | :--- | :--- |
-| **Vérifier** | `.../prod/_user_request_/status` | Affiche l'état (`running` ou `stopped`) et l'ID de l'instance. |
-| **Arrêter** | `.../prod/_user_request_/stop` | Envoie l'ordre d'arrêt. L'état passe à `stopping`. |
-| **Démarrer** | `.../prod/_user_request_/start` | Relance l'instance. L'état passe à `pending` puis `running`. |
+---
 
-> **Validation :** Il suffit de cliquer sur les liens générés par le script pour voir le JSON de réponse changer d'état dans le navigateur.
+## 🧪 Vérification Technique (Preuve de concept)
+
+Comment être sûr que l'API pilote vraiment l'infrastructure ? Faites ce test :
+
+1. Cliquez sur le lien **STOP** dans votre navigateur.
+2. Ouvrez votre terminal et demandez directement à AWS l'état de la machine :
+
+```bash
+awslocal ec2 describe-instances --query 'Reservations[0].Instances[0].State.Name' --output text
+
+```
+
+**Résultat :** Le terminal affichera `stopped`.
+Cela prouve que votre action Web a eu un impact réel sur le Backend ("Back-end driven by Front-end request").
+
+---
+
+## 🛠️ Commandes Utiles (Makefile)
+
+* `make install` : Installe tout.
+* `make start` : Lance LocalStack.
+* `make deploy` : Déploie l'infra (setup.sh).
+* `make clean` : **Nettoyage complet** (Supprime venv, fichiers temporaires et données LocalStack). Utile pour repartir de zéro.
+* `make stop` : Arrête les services.
+
+---
+
+*Réalisé dans le cadre du TP API-Driven Infrastructure.*
+
+```
+
+### Comment mettre à jour sur GitHub
+
+Comme d'habitude, une fois le fichier sauvegardé :
+
+```bash
+git add README.md
+git commit -m "Update: Documentation finale avec Architecture et Procédure complète"
+git push
+
+`

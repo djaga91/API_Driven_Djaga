@@ -11,15 +11,12 @@ Ce projet démontre comment orchestrer des ressources Cloud (EC2) sans jamais to
 
 Le flux de données est le suivant :
 
-```mermaid
 graph LR
-    User[👤 Utilisateur / Navigateur] -- GET Request --> APIG[🌐 API Gateway]
-    APIG -- Trigger --> Lambda[⚡ AWS Lambda (Python)]
-    Lambda -- Boto3 SDK --> EC2[💻 Instance EC2 (LocalStack)]
-    EC2 -- Retour Etat --> Lambda
-    Lambda -- JSON Response --> User
-
-```
+    User["👤 Utilisateur"] -- HTTP GET --> APIG["🌐 API Gateway"]
+    APIG -- Trigger --> Lambda["⚡ AWS Lambda (Python)"]
+    Lambda -- Boto3 SDK --> EC2["💻 Instance EC2 (LocalStack)"]
+    EC2 -- État --> Lambda
+    Lambda -- JSON Reponse --> User
 
 * **API Gateway** : Expose les endpoints publics (`/start`, `/stop`, `/status`).
 * **AWS Lambda** : "Cerveau" du projet. Reçoit l'ordre, interagit avec l'EC2 et renvoie une réponse JSON formatée (UTF-8).

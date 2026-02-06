@@ -1,3 +1,10 @@
+C'est parti ! Voici le fichier **`README.md`** complet, corrigé et prêt à l'emploi.
+
+Il intègre le diagramme corrigé, les étapes de vérification précises (Stop & Start) et la syntaxe Markdown parfaite pour que tout s'affiche bien sur GitHub.
+
+Copie **intégralement** le bloc ci-dessous :
+
+```markdown
 # ☁️ API-Driven Infrastructure (LocalStack Edition)
 
 > **Projet :** Pilotage dynamique d'une infrastructure AWS simulée via API REST.
@@ -11,12 +18,15 @@ Ce projet démontre comment orchestrer des ressources Cloud (EC2) sans jamais to
 
 Le flux de données est le suivant :
 
+```mermaid
 graph LR
     User["👤 Utilisateur"] -- HTTP GET --> APIG["🌐 API Gateway"]
     APIG -- Trigger --> Lambda["⚡ AWS Lambda (Python)"]
     Lambda -- Boto3 SDK --> EC2["💻 Instance EC2 (LocalStack)"]
     EC2 -- État --> Lambda
-    Lambda -- JSON Reponse --> User
+    Lambda -- JSON Réponse --> User
+
+```
 
 * **API Gateway** : Expose les endpoints publics (`/start`, `/stop`, `/status`).
 * **AWS Lambda** : "Cerveau" du projet. Reçoit l'ordre, interagit avec l'EC2 et renvoie une réponse JSON formatée (UTF-8).
@@ -88,17 +98,42 @@ L'API répond en JSON formaté avec des émojis pour indiquer l'état visuelleme
 Comment être sûr que l'API pilote vraiment l'infrastructure ? Nous allons comparer l'action Web avec l'état réel du serveur AWS.
 
 **Commande de vérification (à lancer dans le terminal) :**
+
 > Cette commande interroge directement AWS pour connaître l'état de la machine.
+
 ```bash
 ./rep_localstack/bin/awslocal ec2 describe-instances --query 'Reservations[0].Instances[0].State.Name' --output text
 
+```
+
+### 🛑 Test 1 : Arrêt de la machine
+
+1. Cliquez sur le lien **STOP** dans votre navigateur.
+2. Exécutez la commande de vérification ci-dessus dans le terminal.
+3. **Résultat :** Le terminal doit afficher `stopped`.
+
+### 🚀 Test 2 : Démarrage (L'inverse)
+
+1. Cliquez sur le lien **START** dans votre navigateur.
+2. Attendez environ **5 secondes** (le temps du démarrage simulé).
+3. Relancez la même commande de vérification.
+4. **Résultat :** Le terminal doit afficher `running`.
+
+> **Conclusion :** Ces tests prouvent que votre interface Web (Front-end) pilote avec succès et en temps réel le moteur AWS (Back-end).
+
+---
+
 ## 🛠️ Commandes Utiles (Makefile)
 
-* `make install` : Installe tout.
-* `make start` : Lance LocalStack.
-* `make deploy` : Déploie l'infra (setup.sh).
-* `make clean` : **Nettoyage complet** (Supprime venv, fichiers temporaires et données LocalStack). Utile pour repartir de zéro.
-* `make stop` : Arrête les services.
+Un **Makefile** est inclus pour automatiser toutes les tâches répétitives.
+
+| Commande | Description |
+| --- | --- |
+| `make install` | 📦 **Installation :** Crée l'environnement virtuel et installe LocalStack & AWS CLI. |
+| `make start` | 🚀 **Démarrage :** Lance le moteur LocalStack en arrière-plan. |
+| `make deploy` | 🏗️ **Déploiement :** Lance le script `setup.sh` (Infra + API + Lambda). |
+| `make stop` | 🛑 **Arrêt :** Stoppe les conteneurs et services LocalStack. |
+| `make clean` | 🧹 **Nettoyage :** Supprime l'environnement virtuel et les fichiers temporaires (Idéal pour repartir de zéro). |
 
 ---
 
@@ -106,13 +141,4 @@ Comment être sûr que l'API pilote vraiment l'infrastructure ? Nous allons comp
 
 ```
 
-### Comment mettre à jour sur GitHub
-
-Comme d'habitude, une fois le fichier sauvegardé :
-
-```bash
-git add README.md
-git commit -m "Update: Documentation finale avec Architecture et Procédure complète"
-git push
-
-`
+```

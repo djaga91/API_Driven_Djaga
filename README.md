@@ -1,10 +1,3 @@
-C'est parti ! Voici le fichier **`README.md`** complet, corrigé et prêt à l'emploi.
-
-Il intègre le diagramme corrigé, les étapes de vérification précises (Stop & Start) et la syntaxe Markdown parfaite pour que tout s'affiche bien sur GitHub.
-
-Copie **intégralement** le bloc ci-dessous :
-
-```markdown
 # ☁️ API-Driven Infrastructure (LocalStack Edition)
 
 > **Projet :** Pilotage dynamique d'une infrastructure AWS simulée via API REST.

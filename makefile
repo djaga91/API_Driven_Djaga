@@ -25,7 +25,8 @@ install:
 	python3 -m venv $(VENV_DIR)
 	@echo -e "$(BLUE)⬇️  Installation des dépendances (LocalStack & AWS CLI)...$(RESET)"
 	$(ACTIVATE) && pip install --upgrade pip > /dev/null
-	$(ACTIVATE) && pip install localstack awscli-local > /dev/null
+	# --- CORRECTION ICI : Ajout de 'awscli' ---
+	$(ACTIVATE) && pip install localstack awscli-local awscli > /dev/null
 	@echo -e "$(GREEN)✅ Installation terminée.$(RESET)"
 
 start:

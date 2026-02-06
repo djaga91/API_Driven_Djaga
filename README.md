@@ -90,14 +90,26 @@ Comment être sûr que l'API pilote vraiment l'infrastructure ? Faites ce test :
 1. Cliquez sur le lien **STOP** dans votre navigateur.
 2. Ouvrez votre terminal et demandez directement à AWS l'état de la machine :
 
-```bash
-awslocal ec2 describe-instances --query 'Reservations[0].Instances[0].State.Name' --output text
 
-```
+**Commande à exécuter dans le terminal :**
+
+```bash
+# Via le chemin direct (Recommandé) :
+./rep_localstack/bin/awslocal ec2 describe-instances --query 'Reservations[0].Instances[0].State.Name' --output text
 
 **Résultat :** Le terminal affichera `stopped`.
 Cela prouve que votre action Web a eu un impact réel sur le Backend ("Back-end driven by Front-end request").
 
+Test de Démarrage (L'inverse) 🚀
+Cliquez sur le lien START dans votre navigateur.
+
+Attendez 5 secondes (le temps du boot).
+
+Relancez la même commande.
+
+Résultat : Le terminal affiche running.
+
+Conclusion : Votre interface Web (Front-end) pilote avec succès le moteur AWS (Back-end).
 ---
 
 ## 🛠️ Commandes Utiles (Makefile)

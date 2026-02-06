@@ -28,7 +28,8 @@ echo ""
 
 # Installation silencieuse
 echo -ne "📦 ${BLUE}[1/5] Vérification des outils AWS...${NC}"
-pip install awscli-local > /dev/null 2>&1
+# --- CORRECTION ICI : Installation de awscli ET awscli-local ---
+pip install awscli-local awscli > /dev/null 2>&1
 echo -e "${GREEN} ✅ OK${NC}"
 
 # 1. Creation EC2
